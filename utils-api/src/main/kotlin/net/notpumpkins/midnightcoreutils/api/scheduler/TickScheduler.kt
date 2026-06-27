@@ -104,6 +104,7 @@ class TickScheduler {
         for (task in snapshot) {
             if (task.cancelled.get()) {
                 queue.remove(task)
+                tasksById.remove(task.id)
                 continue
             }
 
