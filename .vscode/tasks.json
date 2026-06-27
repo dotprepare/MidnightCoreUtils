@@ -1,0 +1,76 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Build Mod JAR",
+      "type": "shell",
+      "command": "./gradlew :midnightcoreutils:jar",
+      "group": "build",
+      "problemMatcher": [],
+      "detail": "Build the standard (un-obfuscated) mod JAR"
+    },
+    {
+      "label": "Build Obfuscated JAR",
+      "type": "shell",
+      "command": "./gradlew :midnightcoreutils:proguardJar",
+      "group": "build",
+      "problemMatcher": [],
+      "detail": "Build the ProGuard-obfuscated distribution JAR"
+    },
+    {
+      "label": "Run All API Tests",
+      "type": "shell",
+      "command": "./gradlew :utils-api:test",
+      "group": "test",
+      "problemMatcher": [],
+      "detail": "Run all 60+ unit tests in utils-api (no Forge needed)"
+    },
+    {
+      "label": "Run a Specific Test",
+      "type": "shell",
+      "command": "./gradlew :utils-api:test --tests \"*${input:testClass}*\"",
+      "group": "test",
+      "problemMatcher": [],
+      "detail": "Run tests matching a class name pattern (e.g. ModEventBusTest)"
+    },
+    {
+      "label": "Run NeoForge Client",
+      "type": "shell",
+      "command": "./gradlew :midnightcoreutils:runClient",
+      "group": "test",
+      "problemMatcher": [],
+      "detail": "Launch the Minecraft client with the mod loaded"
+    },
+    {
+      "label": "Run NeoForge Server",
+      "type": "shell",
+      "command": "./gradlew :midnightcoreutils:runServer",
+      "group": "test",
+      "problemMatcher": [],
+      "detail": "Launch the Minecraft dedicated server with the mod loaded"
+    },
+    {
+      "label": "Clean Build All",
+      "type": "shell",
+      "command": "./gradlew clean build",
+      "group": "build",
+      "problemMatcher": [],
+      "detail": "Clean and rebuild both modules + run all tests"
+    },
+    {
+      "label": "Publish to Local Maven",
+      "type": "shell",
+      "command": "./gradlew publish",
+      "group": "build",
+      "problemMatcher": [],
+      "detail": "Publish JARs to the local Maven repo at midnightcoreutils/repo/"
+    }
+  ],
+  "inputs": [
+    {
+      "id": "testClass",
+      "type": "promptString",
+      "description": "Test class name pattern (e.g. ModEventBusTest, *PacketSync*)"
+    }
+  ]
+}

@@ -1,0 +1,63 @@
+# ── OS ──
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# ── Java ──
+*.class
+*.jar
+*.war
+*.nar
+hs_err_pid*
+*.log
+*.tmp
+*.temp
+*.dylib
+*.so
+*.dll
+*.jks
+*.p12
+
+# ── Gradle ──
+.gradle
+build
+!gradle/wrapper/gradle-wrapper.jar
+.gradletasknamecache
+
+# ── IDE: IntelliJ IDEA ──
+out/
+.idea/workspace.xml
+.idea/shelf/
+.idea/tasks.xml
+.idea/dictionaries/
+.idea/libraries/
+.idea/.gitignore
+*.iml
+*.ipr
+*.iws
+.idea_modules/
+
+# ── IDE: VS Code ──
+.vscode/settings.json
+# but keep project-level shared configs:
+!.vscode/tasks.json
+!.vscode/extensions.json
+
+# ── IDE: Eclipse ──
+.project
+.classpath
+.settings
+bin/
+
+# ── Project ──
+run
+repo/
+native-bin/
+crash-*.log
+local.properties
+*.attach_pid*
+
+# ── OpenCode ──
+.opencode
+.agents

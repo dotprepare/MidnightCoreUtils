@@ -1,0 +1,12 @@
+{
+  "recommendations": [
+    "fwcd.kotlin",
+    "naco-siren.gradle-language",
+    "richardwillis.vscode-gradle-extension",
+    "vscjava.vscode-java-pack",
+    "redhat.java",
+    "sonarsource.sonarlint-vscode",
+    "eamodio.gitlens",
+    "yzhang.markdown-all-in-one"
+  ]
+}

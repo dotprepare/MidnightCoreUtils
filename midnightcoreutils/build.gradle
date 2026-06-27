@@ -1,0 +1,181 @@
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+    id 'idea'
+    id 'net.neoforged.moddev' version '2.0.141'
+    id 'org.jetbrains.kotlin.jvm'
+}
+
+group = rootProject.group
+version = rootProject.version
+
+base {
+    archivesName = mod_id
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+    maven {
+        name = 'Kotlin for Forge'
+        url = 'https://thedarkcolour.github.io/KotlinForForge/'
+        content { includeGroup "thedarkcolour" }
+    }
+}
+
+configurations {
+    proguard
+}
+
+dependencies {
+    proguard 'com.guardsquare:proguard-base:7.6.0'
+}
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+kotlin.jvmToolchain(21)
+
+neoForge {
+    version = neo_version
+
+    parchment {
+        mappingsVersion = parchment_mappings_version
+        minecraftVersion = parchment_minecraft_version
+    }
+
+    runs {
+        client {
+            client()
+            systemProperty 'neoforge.enabledGameTestNamespaces', mod_id
+        }
+        server {
+            server()
+            programArgument '--nogui'
+            systemProperty 'neoforge.enabledGameTestNamespaces', mod_id
+        }
+        gameTestServer {
+            type = "gameTestServer"
+            systemProperty 'neoforge.enabledGameTestNamespaces', mod_id
+        }
+        data {
+            data()
+            programArguments.addAll '--mod', mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
+        }
+        configureEach {
+            systemProperty 'forge.logging.markers', 'REGISTRIES'
+            logLevel = org.slf4j.event.Level.DEBUG
+        }
+    }
+
+    mods {
+        "${mod_id}" {
+            sourceSet(sourceSets.main)
+        }
+    }
+}
+
+sourceSets.main.resources { srcDir 'src/generated/resources' }
+
+dependencies {
+    implementation 'thedarkcolour:kotlinforforge-neoforge:5.3.0'
+    implementation project(':utils-api')
+
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.11.0'
+    testImplementation 'io.mockk:mockk:1.13.12'
+}
+
+tasks.test {
+    useJUnitPlatform()
+    testLogging {
+        events("passed", "skipped", "failed")
+        showStandardStreams = true
+        exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+    }
+}
+
+var generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {
+    var replaceProperties = [minecraft_version      : minecraft_version,
+                             minecraft_version_range: minecraft_version_range,
+                             neo_version            : neo_version,
+                             neo_version_range      : neo_version_range,
+                             loader_version_range   : loader_version_range,
+                             mod_id                 : mod_id,
+                             mod_name               : mod_name,
+                             mod_license            : mod_license,
+                             mod_version            : mod_version,
+                             mod_authors            : mod_authors,
+                             mod_description        : mod_description]
+    inputs.properties replaceProperties
+    expand replaceProperties
+    from "src/main/templates"
+    into "build/generated/sources/modMetadata"
+}
+
+sourceSets.main.resources.srcDir generateModMetadata
+neoForge.ideSyncTask generateModMetadata
+
+publishing {
+    publications {
+        register('mavenJava', MavenPublication) {
+            from components.java
+        }
+    }
+    repositories {
+        maven {
+            url "file://${project.projectDir}/repo"
+        }
+    }
+}
+
+// ---- ProGuard Obfuscation ----
+// Run: ./gradlew :midnightcoreutils:proguardJar
+// Output: build/libs/midnightcoreutils-<version>-obf.jar
+//
+// The obfuscated jar is for distribution only, NOT the development environment.
+// ProGuard renames classes/methods/fields to make reverse engineering harder.
+
+def mappingFile = layout.buildDirectory.file('proguard/mapping.txt').get().asFile
+
+tasks.register('proguardJar', JavaExec) {
+    dependsOn jar, ':utils-api:classes'
+
+    def inJar  = tasks.jar.archiveFile.get().asFile
+    def outJar = file("${tasks.jar.archiveFile.get().asFile.parent}/${tasks.jar.archiveBaseName.get()}-${tasks.jar.archiveVersion.get()}-obf.jar")
+
+    inputs.file(inJar)
+    inputs.file('proguard-rules.pro')
+    outputs.file(outJar)
+
+    classpath = configurations.proguard
+    mainClass = 'proguard.ProGuard'
+
+    args '-injars',  inJar.path
+    args '-outjars', outJar.path
+    args '-libraryjars', "${System.getProperty('java.home')}/jmods/java.base.jmod(!**.java;!module-info)"
+
+    // Add all jars/directories from runtimeClasspath as library jars (pre-computed at config time)
+    def libJars = []
+    configurations.runtimeClasspath.each { lib ->
+        def path = lib.absolutePath
+        if ((path.endsWith('.jar') || path.contains('classes')) && lib.exists()) {
+            libJars.add(path)
+        }
+    }
+    args '-libraryjars', libJars.join(File.pathSeparator)
+
+    args '@' + file('proguard-rules.pro').path
+    args '-printmapping', mappingFile.path
+    args '-printseeds',   layout.buildDirectory.file('proguard/seeds.txt').get().asFile.path
+    args '-verbose'
+
+    doFirst {
+        mappingFile.parentFile.mkdirs()
+        outJar.parentFile.mkdirs()
+    }
+}
+
+idea {
+    module {
+        downloadSources = true
+        downloadJavadoc = true
+    }
+}
