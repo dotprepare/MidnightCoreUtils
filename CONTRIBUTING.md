@@ -4,7 +4,7 @@ Thank you for your interest in MidnightCoreUtils. This document outlines the dev
 
 ## Development Setup
 
-- **JDK:** Corretto 21 (`/home/chanakan/.jdks/corretto-21.0.11` or any JDK 21)
+- **JDK:** Corretto 21 (`/home/***/.jdks/corretto-21.0.11` or any JDK 21)
 - **IDE:** IntelliJ IDEA with Kotlin plugin 2.0.0+
 - **Gradle:** 8.8 (wrapper included)
 
