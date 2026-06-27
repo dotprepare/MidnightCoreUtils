@@ -1,5 +1,8 @@
 # MidnightCoreUtils — Multi-Mod Sync Core
 
+[![Build](https://github.com/dotprepare/MidnightCoreUtils/actions/workflows/build.yml/badge.svg)](https://github.com/dotprepare/MidnightCoreUtils/actions/workflows/build.yml)
+[![](https://jitpack.io/v/dotprepare/MidnightCoreUtils.svg)](https://jitpack.io/#dotprepare/MidnightCoreUtils)
+
 A **Kotlin-first** utility and inter-mod communication framework for NeoForge 1.21.1. Provides 10 integrated systems that let your mods share data, schedule work, fail gracefully, and sync state — all without hard dependencies at compile time.
 
 ```mermaid
@@ -167,28 +170,30 @@ dependencies {
 
 ## Adding as a Dependency
 
-### For Your Mod's `build.gradle`
+### Via JitPack (recommended for external mods)
 
-**If consuming mod has MidnightCoreUtils in the same Gradle project (multi-project):**
+Add the JitPack repository and the dependency:
+
+```kotlin
+repositories {
+    maven { url = uri("https://jitpack.io") }
+}
+
+dependencies {
+    compileOnly("com.github.dotprepare:MidnightCoreUtils:utils-api:Tag")
+    runtimeOnly("com.github.dotprepare:MidnightCoreUtils:midnightcoreutils:Tag")
+}
+```
+
+Replace `Tag` with a Git tag, commit hash, or `main-SNAPSHOT`.  
+See [latest releases](https://github.com/dotprepare/MidnightCoreUtils/releases) for available tags.
+
+### If consuming from the same Gradle project (multi-project):
 
 ```kotlin
 dependencies {
     implementation(project(":utils-api"))
-    // For the runtime mod jar, add the bridge:
     runtimeOnly(project(":midnightcoreutils"))
-}
-```
-
-**If consuming from a published Maven repo:**
-
-```kotlin
-repositories {
-    maven { url = uri("https://your-maven-repo.example.com") }
-}
-
-dependencies {
-    compileOnly("net.notpumpkins:utils-api:1.0")
-    runtimeOnly("net.notpumpkins:midnightcoreutils:1.0")
 }
 ```
 
@@ -953,8 +958,10 @@ class GreeterApiImplTest {
 ```
 
 **Prerequisites:**
-- JDK 21 (configured in `gradle.properties` via `org.gradle.java.home`)
-- Gradle 8.8 (wrapper included)
+- JDK 21 (set `JAVA_HOME` to a JDK 21 installation, or use a JDK 21 as the default `java` on PATH)
+- Gradle 8.8 (wrapper included, no manual install needed)
+
+**CI/CD:** GitHub Actions builds and tests every push. On CI, JDK 21 is provided by `actions/setup-java@v4` — no local JDK path needed.
 
 **Note on `./gradlew :utils-api:test --no-daemon`:** The full test suite runs 60+ tests. If you observe a ~60-second hang after all tests pass, this is a JVM thread-purge issue in the Gradle test executor, not a test failure. All individual test classes pass in 4–5 seconds each.
 

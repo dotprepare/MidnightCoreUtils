@@ -4,5 +4,5 @@ plugins {
 
 allprojects {
     group = rootProject.property("mod_group_id") as String
-    version = rootProject.property("mod_version") as String
+    version = rootProject.findProperty("version") ?: rootProject.property("mod_version")
 }
