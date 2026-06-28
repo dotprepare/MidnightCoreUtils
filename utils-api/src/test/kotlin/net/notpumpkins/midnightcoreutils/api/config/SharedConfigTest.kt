@@ -102,7 +102,7 @@ class SharedConfigTest {
                 try { config.set("modA", "counter", i); config.get<Int>("modA", "counter", -1) }
                 catch (_: Exception) { errors.incrementAndGet() }
                 finally { latch.countDown() }
-            }.start()
+            }.apply { isDaemon = true }.start()
         }
         assertTrue(latch.await(5, TimeUnit.SECONDS))
         assertEquals(0, errors.get())

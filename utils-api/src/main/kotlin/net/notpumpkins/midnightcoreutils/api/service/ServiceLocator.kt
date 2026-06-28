@@ -45,33 +45,37 @@ class ServiceLocator {
 
     @Suppress("UNCHECKED_CAST")
     fun <T : Any> getService(modId: String, serviceClass: Class<T>): T {
+        // Fast path: check for existing service under read lock
         lock.withReadLock {
-            val path = resolving.get()
-            val depPath = "$modId:${serviceClass.simpleName}"
-            check(!(depPath in path)) {
-                "Circular dependency detected when resolving $depPath. Current resolution path: ${path.toList()}"
-            }
+            val existing = getExistingService(modId, serviceClass)
+            if (existing != null) return existing as T
+        }
 
-            val modServices = services[modId]
-            if (modServices != null) {
-                val existing = modServices[serviceClass]
-                if (existing != null) return existing as T
-            }
+        // Lazy init or error path: acquire write lock
+        lock.withWriteLock {
+            // Re-check after lock upgrade
+            val existing = getExistingService(modId, serviceClass)
+            if (existing != null) return existing as T
 
             val modFactories = lazyFactories[modId]
             if (modFactories != null) {
                 val factory = modFactories[serviceClass]
                 if (factory != null) {
+                    val path = resolving.get()
+                    val depPath = "$modId:${serviceClass.simpleName}"
+                    if (depPath in path) {
+                        throw CircularDependencyException(
+                            "Circular dependency detected when resolving $depPath. Current resolution path: ${path.toList()}"
+                        )
+                    }
+
                     path.add(depPath)
                     resolving.set(path)
                     val instance = factory()
                     path.remove(depPath)
 
-                    lock.withWriteLock {
-                        val modSvcs = services.getOrPut(modId) { concurrentHashMap() }
-                        modSvcs[serviceClass] = instance
-                    }
-
+                    val modSvcs = services.getOrPut(modId) { concurrentHashMap() }
+                    modSvcs[serviceClass] = instance
                     modFactories.remove(serviceClass)
                     return instance as T
                 }
@@ -82,6 +86,13 @@ class ServiceLocator {
                     "Ensure the providing mod has registered this service."
             )
         }
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun <T : Any> getExistingService(modId: String, serviceClass: Class<T>): T? {
+        val modServices = services[modId] ?: return null
+        val existing = modServices[serviceClass] ?: return null
+        return existing as T
     }
 
     fun hasService(modId: String, serviceClass: Class<*>): Boolean {

@@ -117,7 +117,7 @@ class ServiceLocatorTest {
                 try { assertEquals("Hello", locator.getService("modA", GreetingService::class.java).greet()) }
                 catch (_: Exception) { errors.incrementAndGet() }
                 finally { latch.countDown() }
-            }.start()
+            }.apply { isDaemon = true }.start()
         }
         assertTrue(latch.await(5, TimeUnit.SECONDS))
         assertEquals(0, errors.get())
